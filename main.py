@@ -1,3 +1,4 @@
+import wikipedia
 import os
 import time
 import requests
@@ -7,19 +8,23 @@ import pyttsx3
 import datetime
 import webbrowser as wb
 import pymorphy2
+import random
+wikipedia.set_lang("ru")
 morph = pymorphy2.MorphAnalyzer()
 setting = 0
 city = "Ижевск"
-
+muz = ["1.mp3", "2.mp3", "3.mp3"]
 opts = {
     "alias": ('антон', 'антошка', 'антончик', 'антоша', 'антун', 'антоний', 'тоня'),
-    "tbr": ('скажи', 'расскажи', 'покажи', 'сколько', 'произнеси'),
+    "tbr": ('скажи', 'расскажи', 'покажи', 'сколько', 'произнеси', 'что ты', 'что'),
     "cmds": {
         "ctime": ('текущее время', 'сейчас времени', 'который час'),
         "radio": ('включи музыку', 'воспроизведи радио', 'включи радио'),
         "stupid1": ('расскажи анектод', 'рассмеши меня', 'ты знаешь анектоды'),
-        "google": ('найди', "нагугли", "что такое"),
+        "google": ('найди', "нагугли"),
         "pogoda": ('какая погода в', 'какая погодка в', 'сколько градусов в'),
+        "what": ('такое', 'значит'),
+        "list": ('можешь', 'умеешь')
 
     }
 }
@@ -38,7 +43,7 @@ def callback(recognizer, audio):
         voice = recognizer.recognize_google(audio, language="ru-RU").lower()
         print("[log] Распознано: " + voice)
 
-        if voice.startswith(opts["alias"]) or setting == 0:   #if voice.startswith(opts["alias"] or setting == 0):
+        if voice.startswith(opts["alias"]) or setting == 0:  # if voice.startswith(opts["alias"] or setting == 0):
 
             # обращаются к Антону
             cmd = voice
@@ -58,20 +63,23 @@ def callback(recognizer, audio):
             cmd = cmd.split()
             if len(cmd) > 1:
                 cmd = cmd[0]
+
             cmd = "".join(cmd)
 
             cmd = recognize_cmd(cmd)
 
             execute_cmd(cmd['cmd'])
-
+    except Exception as e:
+        print(e)
     except sr.UnknownValueError:
         print("[log] Голос не распознан!")
     except sr.RequestError as e:
         print("[log] Неизвестная ошибка, проверьте интернет!")
 
 
-def recognize_cmd(cmd):
 
+def recognize_cmd(cmd):
+    print(cmd)
     RC = {'cmd': '', 'percent': 0}
     for c, v in opts['cmds'].items():
 
@@ -96,7 +104,7 @@ def execute_cmd(cmd):
 
     elif cmd == 'radio':
         #музончик)
-        wb.open("https://music.youtube.com/search?q=" + " ".join(gcmd))
+        os.system(random.choice(muz))
         #os.system("C:\\Users\\User\\PycharmProjects\\Anton\\res\\mus.mp3")
 
     elif cmd == 'stupid1':
@@ -119,6 +127,17 @@ def execute_cmd(cmd):
         b = 'Ощущается как', str(temperature_feels), 'градусов по цельсию'
         b = a, ', ', b
         speak(b)
+    elif cmd == 'list':
+        speak('''
+        Я могу:
+        Сказать который час,
+        рассказать анектод,
+        включить музыку,
+        сказать какая погода в вашем городе,
+        и ответить на ваш вопрос!
+        ''')
+    elif cmd == 'what':
+        speak(wikipedia.summary(" ".join(gcmd[1:]), sentences=3))
 
     else:
         speak("Команда не распознана")
