@@ -39,6 +39,7 @@ def speak(what):
 
 
 def callback(recognizer, audio):
+    print("работаем-работаем")
     try:
         voice = recognizer.recognize_google(audio, language="ru-RU").lower()
         print("[log] Распознано: " + voice)
@@ -143,6 +144,7 @@ def execute_cmd(cmd):
         speak("Команда не распознана")
 
 # запуск
+
 r = sr.Recognizer()
 m = sr.Microphone(device_index=1)
 
@@ -151,13 +153,13 @@ with m as source:
 
 speak_engine = pyttsx3.init()
 
-
-
 # forced cmd test
-#speak("Мой разработчик не научил меня анекдотам ... Ха ха ха")
+# speak("Мой разработчик не научил меня анекдотам ... Ха ха ха")
 
 speak("Приветствую, я Антон")
 speak("Чем я могу помочь?")
-
 stop_listening = r.listen_in_background(m, callback)
-while True: time.sleep(0.1) # infinity loop
+
+while True: time.sleep(0.1)  # infinity loop
+
+
