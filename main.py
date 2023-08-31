@@ -14,7 +14,9 @@ morph = pymorphy2.MorphAnalyzer()
 setting = 0
 city = "Ижевск"
 muz = ["1.mp3", "2.mp3", "3.mp3"]
+ball = ["да", "нет", "не знаю", "спроси позже", "скорее всего", "врятли"]
 scazki = ["colobok.mp3", "gusi.mp3", "lyagushka.mp3", "masha.mp3", "medvedi.mp3", "repka.mp3", "terem.mp3"]
+
 opts = {
     "alias": ('антон', 'антошка', 'антончик', 'антоша', 'антун', 'антоний', 'тоня'),
     # "tbr": ('скажи', 'расскажи', 'покажи', 'сколько', 'произнеси', 'что ты', 'что'), принят отказ в Антон V 0.4
@@ -32,7 +34,7 @@ opts = {
         "ya": ('включи яндекс', 'открой яндекс'),
         "uchi": ('включи учи ру', 'открой учи ру', 'включи uchi.ru', 'открой uchi.ru', 'uchi.ru'),
         "figna": ('включи skysmart', 'открой skysmart', 'включи скайсмарт', 'открой скайсмарт'),
-
+        "magic": ('магический шар', 'шар', 'магический шар скажи', 'шар скажи', 'шарик', 'шарик скажи')
     }
 }
 
@@ -45,10 +47,10 @@ def speak(what):
     speak_engine.stop()
 
 
-def callback(audio):
+def callback(recognize, audio):
     print("работаем-работаем")
     try:
-        voice = r.recognize_google(audio, language="ru-RU").lower()
+        voice = recognize.recognize_google(audio, language="ru-RU").lower()
         print("[log] Распознано: " + voice)
 
         if voice.startswith(opts["alias"]) or setting == 0:  # if voice.startswith(opts["alias"] or setting == 0):
@@ -137,6 +139,8 @@ def execute_cmd(cmd):
         Сказать который час,
         рассказать анектод,
         включить музыку,
+        рассказать сказку,
+        поиграть в магический шар,
         сказать какая погода в вашем городе,
         и ответить на ваш вопрос!
         ''')
@@ -155,6 +159,8 @@ def execute_cmd(cmd):
         wb.open("https://ya.ru/")
     elif cmd == 'uchi':
         wb.open("https://uchi.ru/")
+    elif cmd == 'magic':
+        speak(random.choice(ball))
     else:
         speak("Команда не распознана")
 
@@ -173,9 +179,9 @@ speak_engine = pyttsx3.init()
 
 speak("Приветствую, я Антон")
 speak("Чем я могу помочь?")
-#stop_listening = r.listen_in_background(m, callback)
+stop_listening = r.listen_in_background(m, callback)
 
-aud = r.listen(m)
-callback(aud)
+#aud = r.listen(m)
+#callback(aud)
 
 while True: time.sleep(0.1)  # infinity loop
