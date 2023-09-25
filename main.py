@@ -9,6 +9,8 @@ import datetime
 import webbrowser as wb
 import pymorphy2
 import random
+import winsound
+
 wikipedia.set_lang("ru")
 morph = pymorphy2.MorphAnalyzer()
 setting = 0
@@ -22,11 +24,12 @@ opts = {
     # "tbr": ('скажи', 'расскажи', 'покажи', 'сколько', 'произнеси', 'что ты', 'что'), принят отказ в Антон V 0.4
     "cmds": {
         "ctime": ('текущее время', 'сейчас времени', 'который час'),
-        "radio": ('включи музыку', 'воспроизведи радио', 'включи радио'),
+        "radio": ('включи музыку', 'воспроизведи музыку'),
+        "rad": ('воспроизведи радио', 'включи радио'),
         "stupid1": ('расскажи анектод', 'рассмеши меня', 'ты знаешь анектоды'),
         "google": ('найди', "нагугли"),
         "pogoda": ('какая погода в', 'какая погодка в', 'сколько градусов в'),
-        "what": ('что такое', 'что значит'),
+        "what": ('что такое', 'что значит', 'кто такой'),
         "list": ('что ты можешь', 'что ты умеешь'),
         "scazki": ('расскажи сказку', 'включи сказку', 'хочу сказку'),
         "youtube": ('включи ютуб', 'открой ютуб'),
@@ -34,7 +37,8 @@ opts = {
         "ya": ('включи яндекс', 'открой яндекс'),
         "uchi": ('включи учи ру', 'открой учи ру', 'включи uchi.ru', 'открой uchi.ru', 'uchi.ru'),
         "figna": ('включи skysmart', 'открой skysmart', 'включи скайсмарт', 'открой скайсмарт'),
-        "magic": ('магический шар', 'шар', 'магический шар скажи', 'шар скажи', 'шарик', 'шарик скажи')
+        "magic": ('магический шар', 'шар', 'магический шар скажи', 'шар скажи', 'шарик', 'шарик скажи'),
+        "name": ('меня зовут', 'зови меня', 'мой титул', 'зовут', 'меня', 'нас зовут', 'зовут')
     }
 }
 
@@ -45,6 +49,7 @@ def speak(what):
     speak_engine.say(what)
     speak_engine.runAndWait()
     speak_engine.stop()
+
 
 
 def callback(recognize, audio):
@@ -66,8 +71,11 @@ def callback(recognize, audio):
             global sapros
 
             sapros = cmd
-            for x in opts['cmds']:
-                sapros = sapros.replace(x, "").strip()
+            for i in opts['cmds']:
+
+                for x in opts['cmds'][i]:
+                    print(x)
+                    sapros = sapros.replace(x, "").strip()
             # распознаем и выполняем команду
 
 
@@ -76,9 +84,11 @@ def callback(recognize, audio):
 
             execute_cmd(cmd['cmd'])
     except sr.RequestError:
+        callback(r, r.listen(m, 5, 5))
         print("[log] Неизвестная ошибка, проверьте интернет!")
     except sr.UnknownValueError:
         print("[log] Голос не распознан!")
+        callback(r, r.listen(m, 5, 5))
     except Exception as e:
         print(e)
 
@@ -121,7 +131,7 @@ def execute_cmd(cmd):
         wb.open("https://www.google.com/search?q=" + " ".join(gcmd))
     elif cmd == 'pogoda':
 
-        city = gcmd[-1]
+        city = gcmd[0]
         city = morph.parse(city)[0].normal_form
         url = 'https://api.openweathermap.org/data/2.5/weather?q=' + city + '&units=metric&lang=ru&appid=79d1ca96933b0328e1c7e3e7a26cb347'
         weather_data = requests.get(url).json()
@@ -132,7 +142,8 @@ def execute_cmd(cmd):
         a = 'Сейчас в городе', city, str(temperature), 'градусов по цельсию'
         b = 'Ощущается как', str(temperature_feels), 'градусов по цельсию'
         b = a, ', ', b
-        speak(b)
+        if b != 'main':
+            speak(b)
     elif cmd == 'list':
         speak('''
         Я могу:
@@ -145,9 +156,10 @@ def execute_cmd(cmd):
         и ответить на ваш вопрос!
         ''')
     elif cmd == 'what':
-        speak(wikipedia.summary(" ".join(gcmd[1:]), sentences=3))
+        speak(wikipedia.summary(" ".join(gcmd), sentences=2))
+    elif cmd == 'rad':
+        wb.open("http://europaplus.hostingradio.ru:8014/ep-top256.mp3")
     elif cmd == 'scazki':
-
         os.system(f"сказки\\{random.choice(scazki)}")
     elif cmd == 'youtube':
         wb.open("https://www.youtube.com/")
@@ -160,10 +172,19 @@ def execute_cmd(cmd):
     elif cmd == 'uchi':
         wb.open("https://uchi.ru/")
     elif cmd == 'magic':
-        speak(random.choice(ball))
+        speak("Магический шар вас слушает")
+        winsound.PlaySound("mag.mp3", winsound.SND_ALIAS)
+        time.sleep(3)
+        speak(f"Звёзды говорят {random.choice(ball)}")
+    elif cmd == 'name':
+        speak(f"Приятно познакомится {gcmd}!")
+        f = open("name.txt", "w", encoding="utf-8")
+        f.write(str(gcmd[0]))
+        f.close()
     else:
         speak("Команда не распознана")
-
+    print("hello")
+    callback(r, r.listen(m, 5, 5))
 # запуск
 
 r = sr.Recognizer()
@@ -176,12 +197,26 @@ speak_engine = pyttsx3.init()
 
 # forced cmd test
 # speak("Мой разработчик не научил меня анекдотам ... Ха ха ха")
-
-speak("Приветствую, я Антон")
-speak("Чем я могу помочь?")
-stop_listening = r.listen_in_background(m, callback)
-
+f = open("name.txt", "r", encoding='utf-8')
+if os.stat("name.txt").st_size > 0:
+    name = f.readline()
+    print(f)
+    speak(f"Приветствую {name}")
+    speak("Чем я могу помочь?")
+else:
+    speak("Приветствую, я Антон")
+    speak("Чем я могу помочь?")
+f.close()
+#r.listen_in_background(m, callback)
+with m:
+    callback(r, r.listen(m, 5, 5))
 #aud = r.listen(m)
 #callback(aud)
 
-while True: time.sleep(0.1)  # infinity loop
+while True:
+    try:
+        time.sleep(0.1)
+    except KeyboardInterrupt:
+        break
+    except Exception as e:
+        print(e)
