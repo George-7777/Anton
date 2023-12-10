@@ -2,6 +2,7 @@ import wikipedia
 import os
 import PySimpleGUI as sg
 import time
+from ai import responce
 import speech_recognition as sr
 from fuzzywuzzy import fuzz
 import pyttsx3
@@ -9,12 +10,10 @@ import datetime
 import webbrowser as wb
 from threading import Thread
 import pymorphy2
-from bs4 import BeautifulSoup
 import requests
 import random
 import winsound
 import config
-from playsound import playsound
 import par
 wikipedia.set_lang("ru")
 morph = pymorphy2.MorphAnalyzer()
@@ -23,9 +22,9 @@ city = "Ижевск"
 muz = ["1.mp3", "2.mp3", "3.mp3"]
 ball = ["да", "нет", "не знаю", "спроси позже", "скорее всего", "врятли"]
 scazki = ["colobok.mp3", "gusi.mp3", "lyagushka.mp3", "masha.mp3", "medvedi.mp3", "repka.mp3", "terem.mp3"]
-
+cmds = ""
 opts = config.command()
-
+boltun_mod = False
 
 # функции
 
@@ -64,7 +63,8 @@ def start():
                 # for x in opts['tbr']:
                 # cmd = cmd.replace(x, "").strip() принят отказ в Антон V0.4
                 global sapros
-
+                global cmds
+                cmds = cmd
                 sapros = cmd
                 for i in opts['cmds']:
 
@@ -100,127 +100,145 @@ def start():
 
     def execute_cmd(cmd):
         gcmd = sapros.split()
-
+        global boltun_mod
+        global cmds
         # gcmd = gcmd[1:]
         print(gcmd)
-        if cmd == 'ctime':
-            # сказать текущее время
-            now = datetime.datetime.now()
-            speak("Сейчас " + str(now.hour) + ":" + str(now.minute))
-
-        elif cmd == 'radio':
-            # музончик)
-            os.system(random.choice(muz))
-            # os.system("C:\\Users\\User\\PycharmProjects\\Anton\\res\\mus.mp3")
-
-        elif cmd == 'stupid1':
-            # рассказать анекдот
-            speak("Мой разработчик не научил меня анекдотам ... Ха ха ха")
-
-        elif cmd == 'google':
-            wb.open("https://www.google.com/search?q=" + " ".join(gcmd))
-        elif cmd == 'pogoda':
-
-            city = gcmd[0]
-            city = morph.parse(city)[0].normal_form
-            url = 'https://api.openweathermap.org/data/2.5/weather?q=' + city + '&units=metric&lang=ru&appid=79d1ca96933b0328e1c7e3e7a26cb347'
-            weather_data = requests.get(url).json()
-            # получаем данные о температуре и о том, как она ощущается
-            temperature = round(weather_data['main']['temp'])
-            temperature_feels = round(weather_data['main']['feels_like'])
-            # выводим значения на экран
-            a = 'Сейчас в городе', city, str(temperature), 'градусов по цельсию'
-            b = 'Ощущается как', str(temperature_feels), 'градусов по цельсию'
-            b = a, ', ', b
-            if b != 'main':
-                speak(b)
-        elif cmd == 'list':
-            speak('''
-            Я могу:
-            Сказать который час,
-            рассказать анектод,
-            включить музыку,
-            рассказать сказку,
-            поиграть в магический шар,
-            сказать какая погода в вашем городе,
-            и ответить на ваш вопрос!
-            ''')
-        elif cmd == 'listt':
-            speak('''
-            Также я могу:
-            Включить ваш любимый (или не очень) сайт.
-            поиграть в магический шар,
-            запомнить ваше имя,
-            посчитать на калькуляторе,
-            подбросить монету,
-            и поставить таймер
-            ''')
-        elif cmd == 'what':
-            speak(wikipedia.summary(" ".join(gcmd), sentences=2))
-        elif cmd == 'rad':
-            wb.open("http://europaplus.hostingradio.ru:8014/ep-top256.mp3")
-            #playsound("http://europaplus.hostingradio.ru:8014/ep-top256.mp3")
-        elif cmd == 'scazki':
-            os.system(f"сказки\\{random.choice(scazki)}")
-        elif cmd == 'youtube':
-            wb.open("https://www.youtube.com/")
-        elif cmd == 'gog':
-            wb.open("https://www.google.ru/")
-        elif cmd == 'figna':
-            wb.open("https://skysmart.ru/")
-        elif cmd == 'ya':
-            wb.open("https://ya.ru/")
-        elif cmd == 'uchi':
-            wb.open("https://uchi.ru/")
-        elif cmd == 'magic':
-            speak("Магический шар вас слушает")
-            winsound.PlaySound("mag.mp3", winsound.SND_ALIAS)
-            time.sleep(3)
-            speak(f"Звёзды говорят {random.choice(ball)}")
-        elif cmd == 'name':
-            speak(f"Приятно познакомится {gcmd}!")
-            f = open("name.txt", "w", encoding="utf-8")
-            f.write(str(gcmd[0]))
-            f.close()
-        elif cmd == 'calc':
-            # for i in cal:
-            # sapros = sapros.replace(i, cal[i]).strip()
-            gcmd = " ".join(gcmd)
-            gcmd = gcmd.replace("х", "*").strip()
-            gcmd = gcmd.replace("в степени", "**").strip()
-            print(gcmd)
-            speak(str(int(eval(gcmd))))
-        elif cmd == 'mon':
-            speak(random.choice(['орёл', 'решка']))
-        elif cmd == 'timer':
-
-            local_time = int(gcmd[0])
-            # Создаём новый поток
-            th = Thread(target=remind, args=())
-            # И запускаем его
-            th.start()
-        elif cmd == "recepts":
-            st_accept = "text/html"  # говорим веб-серверу,
-            # что хотим получить html
-            # имитируем подключение через браузер Mozilla на macOS
-            st_useragent = "Mozilla/5.0 (Macintosh; Intel Mac OS X 12_3_1) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/15.4 Safari/605.1.15"
-            # формируем хеш заголовков
-            headers = {
-                "Accept": st_accept,
-                "User-Agent": st_useragent
-            }
-            speak("Могу посоветовать")
-            speak(par.ppp())
-            speak("Время готовки")
-            speak(par.parsglav())
-            speak("Ингредиенты")
-            for i, j, g in par.parsvtor():
-                speak(f"{i.text} {j.text} {g.text}")
-            speak("Шаги приготовления")
-            for i in par.parsstep():
-                speak(i.text)
+        if boltun_mod:
+            texx = responce(cmds)
+            speak(texx)
         else:
-            speak("Команда не распознана")
+            if cmd == 'ctime':
+                # сказать текущее время
+                now = datetime.datetime.now()
+                speak("Сейчас " + str(now.hour) + ":" + str(now.minute))
+
+            elif cmd == 'radio':
+                # музончик)
+                os.system(random.choice(muz))
+                # os.system("C:\\Users\\User\\PycharmProjects\\Anton\\res\\mus.mp3")
+
+            elif cmd == 'stupid1':
+                # рассказать анекдот
+                speak("Мой разработчик не научил меня анекдотам ... Ха ха ха")
+
+            elif cmd == 'google':
+                wb.open("https://www.google.com/search?q=" + " ".join(gcmd))
+            elif cmd == 'pogoda':
+
+                city = gcmd[0]
+                city = morph.parse(city)[0].normal_form
+                url = 'https://api.openweathermap.org/data/2.5/weather?q=' + city + '&units=metric&lang=ru&appid=79d1ca96933b0328e1c7e3e7a26cb347'
+                weather_data = requests.get(url).json()
+
+                # получаем данные о температуре и о том, как она ощущается
+                temperature = round(weather_data['main']['temp'])
+                temperature_feels = round(weather_data['main']['feels_like'])
+                # выводим значения на экран
+                a = 'Сейчас в городе' + city + str(temperature) + 'градусов по цельсию'
+                b = 'Ощущается как' + str(temperature_feels) + 'градусов по цельсию'
+                b = a + ', ' + b
+
+                speak(b.replace("-", " минус"))
+            elif cmd == 'list':
+                speak('''
+                Я могу:
+                Сказать который час,
+                рассказать анектод,
+                включить музыку,
+                рассказать сказку,
+                поиграть в магический шар,
+                сказать какая погода в вашем городе,
+                и ответить на ваш вопрос!
+                ''')
+            elif cmd == 'listt':
+                speak('''
+                Также я могу:
+                Включить ваш любимый (или не очень) сайт.
+                поиграть в магический шар,
+                запомнить ваше имя,
+                посчитать на калькуляторе,
+                подбросить монету,
+                и поставить таймер
+                ''')
+            elif cmd == 'what':
+                speak(wikipedia.summary(" ".join(gcmd), sentences=2))
+            elif cmd == 'rad':
+                wb.open("http://europaplus.hostingradio.ru:8014/ep-top256.mp3")
+                #playsound("http://europaplus.hostingradio.ru:8014/ep-top256.mp3")
+            elif cmd == 'scazki':
+                os.system(f"сказки\\{random.choice(scazki)}")
+            elif cmd == 'youtube':
+                wb.open("https://www.youtube.com/")
+            elif cmd == 'gog':
+                wb.open("https://www.google.ru/")
+            elif cmd == 'figna':
+                wb.open("https://skysmart.ru/")
+            elif cmd == 'ya':
+                wb.open("https://ya.ru/")
+            elif cmd == 'uchi':
+                wb.open("https://uchi.ru/")
+            elif cmd == 'magic':
+                speak("Магический шар вас слушает")
+                winsound.PlaySound("mag.mp3", winsound.SND_ALIAS)
+                time.sleep(3)
+                speak(f"Звёзды говорят {random.choice(ball)}")
+            elif cmd == 'name':
+                speak(f"Приятно познакомится {gcmd}!")
+                f = open("name.txt", "w", encoding="utf-8")
+                f.write(str(gcmd[0]))
+                f.close()
+            elif cmd == 'calc':
+                # for i in cal:
+                # sapros = sapros.replace(i, cal[i]).strip()
+                gcmd = " ".join(gcmd)
+                gcmd = gcmd.replace("х", "*").strip()
+                gcmd = gcmd.replace("в степени", "**").strip()
+                print(gcmd)
+                speak(str(int(eval(gcmd))))
+            elif cmd == 'mon':
+                speak(random.choice(['орёл', 'решка']))
+            elif cmd == 'timer':
+
+                local_time = int(gcmd[0])
+                # Создаём новый поток
+                th = Thread(target=remind, args=())
+                # И запускаем его
+                th.start()
+            elif cmd == "recepts":
+                st_accept = "text/html"  # говорим веб-серверу,
+                # что хотим получить html
+                # имитируем подключение через браузер Mozilla на macOS
+                st_useragent = "Mozilla/5.0 (Macintosh; Intel Mac OS X 12_3_1) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/15.4 Safari/605.1.15"
+                # формируем хеш заголовков
+                headers = {
+                    "Accept": st_accept,
+                    "User-Agent": st_useragent
+                }
+                speak("Могу посоветовать")
+                speak(par.ppp())
+                speak("Время готовки")
+                speak(par.parsglav())
+                speak("Ингредиенты")
+                for i, j, g in par.parsvtor():
+                    speak(f"{i.text} {j.text} {g.text}")
+                speak("Шаги приготовления")
+                for i in par.parsstep():
+                    speak(i.text)
+            elif cmd == 'boltun':
+                boltun_mod = True
+                f = random.randint(0, 2)
+                if f == 0:
+                    speak("Хорошо. Я люблю поговорить с хорошим человеком")
+                elif f == 1:
+                    speak("Хорошо")
+                elif f == 2:
+                    speak("Давай. О чём поговорим")
+            elif cmd == "zadolbal":
+                speak("ОК")
+                boltun_mod = False
+            else:
+                speak("Команда не распознана. Если вы хотели поболтать, скажите давай поговорим")
         print("hello")
         callback(r, r.listen(m, 5, 5))
     r = sr.Recognizer()
