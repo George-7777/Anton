@@ -15,6 +15,7 @@ import random
 import winsound
 import config
 import par
+
 wikipedia.set_lang("ru")
 morph = pymorphy2.MorphAnalyzer()
 setting = 0
@@ -31,13 +32,20 @@ boltun_mod = False
 # запуск
 def start():
     def speak(what):
+        '''
+
+        :param: str
+        :return: говорилка кароч
+        '''
         print(what)
+        global window
+        text_elem = window['-text-']
+        # выводим в него текст с новым числом
+        text_elem.update(f"Результат: {what}")
         speak_engine.say(what)
         speak_engine.runAndWait()
         speak_engine.stop()
-        text_elem = window['-text-']
-        # выводим в него текст с новым числом
-        text_elem.update("Результат: {}".format(what))
+
     def remind(local_time=1):
 
         local_time = local_time * 60
@@ -105,8 +113,12 @@ def start():
         # gcmd = gcmd[1:]
         print(gcmd)
         if boltun_mod:
-            texx = responce(cmds)
-            speak(texx)
+            if cmd == "zadolbal":
+                speak("ОК")
+                boltun_mod = False
+            else:
+                texx = responce(cmds)
+                speak(texx)
         else:
             if cmd == 'ctime':
                 # сказать текущее время
@@ -120,7 +132,8 @@ def start():
 
             elif cmd == 'stupid1':
                 # рассказать анекдот
-                speak("Мой разработчик не научил меня анекдотам ... Ха ха ха")
+                #speak("Мой разработчик не научил меня анекдотам ... Ха ха ха")
+                speak(par.anektod())
 
             elif cmd == 'google':
                 wb.open("https://www.google.com/search?q=" + " ".join(gcmd))
@@ -234,9 +247,7 @@ def start():
                     speak("Хорошо")
                 elif f == 2:
                     speak("Давай. О чём поговорим")
-            elif cmd == "zadolbal":
-                speak("ОК")
-                boltun_mod = False
+
             else:
                 speak("Команда не распознана. Если вы хотели поболтать, скажите давай поговорим")
         print("hello")
@@ -274,13 +285,13 @@ def update():
 
 # что будет внутри окна
 # первым описываем кнопку и сразу указываем размер шрифта
-layout = [[sg.Text('', size=(25, 5), key='-text-', font='Helvetica 10')],
+layout = [[sg.Text('я Антон', size=(25, 5), key='-text-', font='Helvetica 20')],
     [sg.Button('Спросить',enable_events=True, key='-FUNCTION-', font='Helvetica 32')]
         # затем делаем текст
         ]
 
 # рисуем окно
-window = sg.Window('Антон alpha v.1', layout, size=(500,700))
+window = sg.Window('Антон alpha v.1', layout, size=(500,700), element_justification='c')
 
 # запускаем основной бесконечный цикл
 while True:
