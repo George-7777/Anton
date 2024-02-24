@@ -15,6 +15,14 @@ import random
 import winsound
 import config
 import par
+import urllib3
+from selenium import webdriver as wd
+from selenium.webdriver.common.by import By
+# vars
+auth_token = "hVc7QQd-YA4kW-drrTUm8NouKP15KC_R"
+
+# create objects
+http = urllib3.PoolManager()
 
 wikipedia.set_lang("ru")
 morph = pymorphy2.MorphAnalyzer()
@@ -136,6 +144,7 @@ def start():
                 speak(par.anektod())
 
             elif cmd == 'google':
+                speak("Сейчас открою")
                 wb.open("https://www.google.com/search?q=" + " ".join(gcmd))
             elif cmd == 'pogoda':
 
@@ -238,6 +247,13 @@ def start():
                 speak("Шаги приготовления")
                 for i in par.parsstep():
                     speak(i.text)
+            elif cmd == 'umnidom0':
+                url = f'https://blynk.cloud/external/api/update?token={auth_token}&V4=1'
+                resp = http.request('GET', url)
+
+            elif cmd == 'umnidom1':
+                url = f'https://blynk.cloud/external/api/update?token={auth_token}&V4=0'
+                resp = http.request('GET', url)
             elif cmd == 'boltun':
                 boltun_mod = True
                 f = random.randint(0, 2)
@@ -295,6 +311,7 @@ window = sg.Window('Антон alpha v.1', layout, size=(500,700), element_justi
 
 # запускаем основной бесконечный цикл
 while True:
+    # blynk.run()
     # получаем события, произошедшие в окне
     event, values = window.read()
     # если нажали на крестик
@@ -304,6 +321,7 @@ while True:
     # если нажали на кнопку
     if event == '-FUNCTION-':
         # запускаем связанную функцию
+
         start()
 
 # закрываем окно и освобождаем используемые ресурсы

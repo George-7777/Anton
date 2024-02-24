@@ -2,6 +2,7 @@
 from bs4 import BeautifulSoup
 import requests
 import random
+
 requests.max_redirects = 77
 def parsglav():
    st_accept = "text/html"  # говорим веб-серверу,
@@ -38,7 +39,7 @@ def anektod():
    response = requests.get(url)
    bs = BeautifulSoup(response.text, "lxml")
    temp = bs.find_all('div', 'tecst')
-   return random.choice(temp).text.replace(".-", ".")
+   return random.choice(temp).text.replace(".-", ".").replace("-", "\n-")
 
 def ppp():
    st_accept = "text/html"  # говорим веб-серверу,
