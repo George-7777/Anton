@@ -254,6 +254,13 @@ def start():
             elif cmd == 'umnidom1':
                 url = f'https://blynk.cloud/external/api/update?token={auth_token}&V4=0'
                 resp = http.request('GET', url)
+            elif cmd == 'umnidom2':
+                url = f'https://blynk.cloud/external/api/update?token={auth_token}&V5=255'
+                resp = http.request('GET', url)
+
+            elif cmd == 'umnidom3':
+                url = f'https://blynk.cloud/external/api/update?token={auth_token}&V5=0'
+                resp = http.request('GET', url)
             elif cmd == 'boltun':
                 boltun_mod = True
                 f = random.randint(0, 2)
